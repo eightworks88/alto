@@ -5,27 +5,50 @@ interface Mission {
   title: string;
   status: string;
   budget: string;
-  deadline: string;
+  duration: string;
   createdAt: string;
+  applicants: number;
+  selectedFreelance: string | null;
+  progress: number;
 }
 
-interface MissionState {
+interface MissionsState {
   missions: Mission[];
+  loading: boolean;
+  error: string | null;
 }
 
-const initialState: MissionState = {
+const initialState: MissionsState = {
   missions: [],
+  loading: false,
+  error: null,
 };
 
-const missionSlice = createSlice({
-  name: "mission",
+const missionsSlice = createSlice({
+  name: "missions",
   initialState,
   reducers: {
     setMissions: (state, action) => {
       state.missions = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    updateMission: (state, action) => {
+      const index = state.missions.findIndex((m) => m.id === action.payload.id);
+      if (index !== -1) {
+        state.missions[index] = action.payload;
+      }
     },
   },
 });
 
-export const { setMissions } = missionSlice.actions;
-export default missionSlice.reducer;
+export const { setMissions, setLoading, setError, updateMission } =
+  missionsSlice.actions;
+export default missionsSlice.reducer;

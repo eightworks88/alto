@@ -1,30 +1,46 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 interface Invoice {
-  id: number;
-  number: string;
-  date: string;
-  amount: string;
+  id: string;
+  mission: string;
+  freelance: string;
+  amount: number;
+  period: string;
   status: string;
+  dueDate: string;
+  paidDate: string | null;
 }
 
-interface InvoiceState {
+interface InvoicesState {
   invoices: Invoice[];
+  loading: boolean;
+  error: string | null;
 }
 
-const initialState: InvoiceState = {
+const initialState: InvoicesState = {
   invoices: [],
+  loading: false,
+  error: null,
 };
 
-const invoiceSlice = createSlice({
-  name: "invoice",
+const invoicesSlice = createSlice({
+  name: "invoices",
   initialState,
   reducers: {
     setInvoices: (state, action) => {
       state.invoices = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
     },
   },
 });
 
-export const { setInvoices } = invoiceSlice.actions;
-export default invoiceSlice.reducer;
+export const { setInvoices, setLoading, setError } = invoicesSlice.actions;
+export default invoicesSlice.reducer;
