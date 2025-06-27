@@ -12,7 +12,7 @@ import {
 } from "@/store/freelanceSlice";
 
 const fetchFreelanceDashboard = async () => {
-  const res = await fetch("/api/freelance/dashboard");
+  const res = await fetch("/api/dashboard");
   if (!res.ok) throw new Error("Erreur lors de la récupération du dashboard");
   return res.json();
 };
