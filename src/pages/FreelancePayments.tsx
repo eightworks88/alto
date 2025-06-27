@@ -1,91 +1,120 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, Calendar, DollarSign, Filter } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useFreelancePayments } from "@/hooks/useFreelancePayments";
+import type { RootState } from "@/store/store";
+import { Calendar, DollarSign, Download, Filter, Search } from "lucide-react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 
 const FreelancePayments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const payments = [
-    {
-      id: "PAY-2025-001",
-      mission: "Lead Developer Frontend",
-      company: "DigitalCorp",
-      amount: 11000,
-      period: "Janvier 2025",
-      status: "paid",
-      paidDate: "2025-01-31",
-      method: "Virement bancaire"
-    },
-    {
-      id: "PAY-2024-012",
-      mission: "Consultant React",
-      company: "StartupXYZ",
-      amount: 9600,
-      period: "Décembre 2024",
-      status: "pending",
-      paidDate: null,
-      method: "Virement bancaire"
-    },
-    {
-      id: "PAY-2024-011",
-      mission: "Développeur Full Stack",
-      company: "TechCorp",
-      amount: 8800,
-      period: "Novembre 2024",
-      status: "paid",
-      paidDate: "2024-11-30",
-      method: "Virement bancaire"
-    }
-  ];
+  // Utilisation de Redux et React Query
+  const { isLoading, error } = useFreelancePayments();
+  const payments = useSelector((state: RootState) => state.freelance.payments);
 
+  // TODO: Ces données devraient venir du backend via l'API
   const bankAccount = {
     iban: "FR14 2004 1010 0505 0001 3M02 606",
     bic: "PSSTFRPPPAR",
-    bank: "La Banque Postale"
+    bank: "La Banque Postale",
   };
 
   const sidebarItems = [
     { label: "Dashboard", href: "/freelance", icon: "dashboard" },
     { label: "Mes missions", href: "/freelance/missions", icon: "list" },
     { label: "Profil", href: "/freelance/profile", icon: "user" },
-    { label: "Paiements", href: "/freelance/payments", icon: "wallet" }
+    { label: "Paiements", href: "/freelance/payments", icon: "wallet" },
   ];
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       paid: { label: "Payé", variant: "secondary" as const },
       pending: { label: "En attente", variant: "default" as const },
-      processing: { label: "En cours", variant: "default" as const }
+      processing: { label: "En cours", variant: "default" as const },
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
+  const filteredPayments = payments.filter((payment) => {
+    const matchesSearch =
       payment.mission.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || payment.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalEarnings = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const totalEarnings = payments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
   const paidAmount = payments
-    .filter(payment => payment.status === "paid")
+    .filter((payment) => payment.status === "paid")
     .reduce((sum, payment) => sum + payment.amount, 0);
   const pendingAmount = totalEarnings - paidAmount;
 
+  const handleDownloadReceipt = (paymentId: string) => {
+    // TODO: Implémenter le téléchargement du reçu
+    console.log("Téléchargement du reçu pour:", paymentId);
+  };
+
+  const handleUpdateBankInfo = () => {
+    // TODO: Implémenter la mise à jour des infos bancaires
+    console.log("Mise à jour des informations bancaires");
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout
+        sidebarItems={sidebarItems}
+        userType="freelance"
+        userName="Marie Dubois"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Chargement des paiements...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout
+        sidebarItems={sidebarItems}
+        userType="freelance"
+        userName="Marie Dubois"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-destructive">Erreur: {error.message}</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <DashboardLayout 
+    <DashboardLayout
       sidebarItems={sidebarItems}
       userType="freelance"
       userName="Marie Dubois"
@@ -93,7 +122,9 @@ const FreelancePayments = () => {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mes paiements</h1>
-          <p className="text-muted-foreground">Suivez vos revenus et gérez vos informations bancaires</p>
+          <p className="text-muted-foreground">
+            Suivez vos revenus et gérez vos informations bancaires
+          </p>
         </div>
 
         {/* Stats */}
@@ -102,8 +133,12 @@ const FreelancePayments = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Revenus totaux</p>
-                  <p className="text-2xl font-bold">{totalEarnings.toLocaleString('fr-FR')}€</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Revenus totaux
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {totalEarnings.toLocaleString("fr-FR")}€
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
                   <DollarSign className="h-6 w-6 text-primary" />
@@ -116,8 +151,12 @@ const FreelancePayments = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Reçus</p>
-                  <p className="text-2xl font-bold text-green-600">{paidAmount.toLocaleString('fr-FR')}€</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Reçus
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {paidAmount.toLocaleString("fr-FR")}€
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <span className="text-green-600 font-bold">✓</span>
@@ -130,8 +169,12 @@ const FreelancePayments = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">En attente</p>
-                  <p className="text-2xl font-bold text-orange-600">{pendingAmount.toLocaleString('fr-FR')}€</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    En attente
+                  </p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {pendingAmount.toLocaleString("fr-FR")}€
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Calendar className="h-6 w-6 text-orange-600" />
@@ -145,7 +188,9 @@ const FreelancePayments = () => {
           {/* Historique des paiements */}
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Historique des paiements</h2>
+              <h2 className="text-xl font-semibold">
+                Historique des paiements
+              </h2>
             </div>
 
             {/* Filtres */}
@@ -159,7 +204,7 @@ const FreelancePayments = () => {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[200px]">
                   <Filter className="h-4 w-4 mr-2" />
@@ -193,15 +238,26 @@ const FreelancePayments = () => {
                         </p>
                         {payment.paidDate && (
                           <p className="text-sm text-green-600">
-                            Payé le {new Date(payment.paidDate).toLocaleDateString('fr-FR')}
+                            Payé le{" "}
+                            {new Date(payment.paidDate).toLocaleDateString(
+                              "fr-FR"
+                            )}
                           </p>
                         )}
                       </div>
 
                       <div className="text-right space-y-2">
-                        <p className="text-2xl font-bold">{payment.amount.toLocaleString('fr-FR')}€</p>
-                        <p className="text-sm text-muted-foreground">{payment.method}</p>
-                        <Button variant="outline" size="sm">
+                        <p className="text-2xl font-bold">
+                          {payment.amount.toLocaleString("fr-FR")}€
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {payment.method}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadReceipt(payment.id)}
+                        >
                           <Download className="h-4 w-4 mr-2" />
                           Reçu
                         </Button>
@@ -226,25 +282,37 @@ const FreelancePayments = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Informations bancaires</CardTitle>
-                <CardDescription>Compte de réception des paiements</CardDescription>
+                <CardDescription>
+                  Compte de réception des paiements
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Banque</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Banque
+                  </p>
                   <p className="font-medium">{bankAccount.bank}</p>
                 </div>
-                
+
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">IBAN</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    IBAN
+                  </p>
                   <p className="font-mono text-sm">{bankAccount.iban}</p>
                 </div>
-                
+
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">BIC</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    BIC
+                  </p>
                   <p className="font-mono text-sm">{bankAccount.bic}</p>
                 </div>
 
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleUpdateBankInfo}
+                >
                   Modifier les informations
                 </Button>
               </CardContent>
@@ -253,21 +321,29 @@ const FreelancePayments = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Paramètres de facturation</CardTitle>
-                <CardDescription>Informations pour vos factures</CardDescription>
+                <CardDescription>
+                  Informations pour vos factures
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Statut</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Statut
+                  </p>
                   <p className="font-medium">Micro-entrepreneur</p>
                 </div>
-                
+
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">SIRET</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    SIRET
+                  </p>
                   <p className="font-mono text-sm">123 456 789 00012</p>
                 </div>
-                
+
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">TVA</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    TVA
+                  </p>
                   <p className="font-medium">Non applicable</p>
                 </div>
 

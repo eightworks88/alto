@@ -1,93 +1,105 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Eye, Edit, Users } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useMissionsData } from "@/hooks/useMissionsData";
+import type { RootState } from "@/store/store";
+import { Edit, Eye, Filter, Search, Users } from "lucide-react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const CompanyMissions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const navigate = useNavigate();
 
-  const missions = [
-    {
-      id: 1,
-      title: "Développeur React Senior",
-      status: "in_progress",
-      budget: "550€/jour",
-      duration: "3 mois",
-      createdAt: "2025-01-02",
-      applicants: 8,
-      selectedFreelance: "Marie Dubois",
-      progress: 45
-    },
-    {
-      id: 2,
-      title: "Designer UX/UI",
-      status: "profile_proposed",
-      budget: "480€/jour",
-      duration: "2 mois",
-      createdAt: "2024-12-20",
-      applicants: 12,
-      selectedFreelance: null,
-      progress: 0
-    },
-    {
-      id: 3,
-      title: "Consultant DevOps",
-      status: "completed",
-      budget: "600€/jour",
-      duration: "4 mois",
-      createdAt: "2024-11-15",
-      applicants: 6,
-      selectedFreelance: "Thomas Martin",
-      progress: 100
-    },
-    {
-      id: 4,
-      title: "Data Scientist",
-      status: "draft",
-      budget: "520€/jour",
-      duration: "6 mois",
-      createdAt: "2025-01-10",
-      applicants: 0,
-      selectedFreelance: null,
-      progress: 0
-    }
-  ];
+  // Utilisation de Redux et React Query
+  const { isLoading, error } = useMissionsData();
+  const missions = useSelector((state: RootState) => state.missions.missions);
 
   const sidebarItems = [
     { label: "Dashboard", href: "/company", icon: "dashboard" },
     { label: "Poster un besoin", href: "/company/post-need", icon: "plus" },
     { label: "Missions", href: "/company/missions", icon: "list" },
-    { label: "Factures", href: "/company/invoices", icon: "receipt" }
+    { label: "Factures", href: "/company/invoices", icon: "receipt" },
   ];
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       draft: { label: "Brouillon", variant: "outline" as const },
       published: { label: "Publiée", variant: "secondary" as const },
-      profile_proposed: { label: "Profils proposés", variant: "default" as const },
+      profile_proposed: {
+        label: "Profils proposés",
+        variant: "default" as const,
+      },
       in_progress: { label: "En cours", variant: "default" as const },
       completed: { label: "Terminée", variant: "secondary" as const },
-      cancelled: { label: "Annulée", variant: "destructive" as const }
+      cancelled: { label: "Annulée", variant: "destructive" as const },
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const filteredMissions = missions.filter(mission => {
-    const matchesSearch = mission.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || mission.status === statusFilter;
+  const filteredMissions = missions.filter((mission) => {
+    const matchesSearch = mission.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || mission.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
+  const handleNewMission = () => {
+    navigate("/company/post-need");
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout
+        sidebarItems={sidebarItems}
+        userType="company"
+        userName="TechCorp"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Chargement des missions...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout
+        sidebarItems={sidebarItems}
+        userType="company"
+        userName="TechCorp"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-destructive">Erreur: {error.message}</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <DashboardLayout 
+    <DashboardLayout
       sidebarItems={sidebarItems}
       userType="company"
       userName="TechCorp"
@@ -96,11 +108,11 @@ const CompanyMissions = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Mes missions</h1>
-            <p className="text-muted-foreground">Gérez et suivez toutes vos missions</p>
+            <p className="text-muted-foreground">
+              Gérez et suivez toutes vos missions
+            </p>
           </div>
-          <Button>
-            Nouvelle mission
-          </Button>
+          <Button onClick={handleNewMission}>Nouvelle mission</Button>
         </div>
 
         {/* Filtres */}
@@ -114,7 +126,7 @@ const CompanyMissions = () => {
               className="pl-10"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[200px]">
               <Filter className="h-4 w-4 mr-2" />
@@ -143,44 +155,67 @@ const CompanyMissions = () => {
                       {getStatusBadge(mission.status)}
                     </CardTitle>
                     <CardDescription className="mt-2">
-                      Créée le {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+                      Créée le{" "}
+                      {new Date(mission.createdAt).toLocaleDateString("fr-FR")}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/company/missions/${mission.id}`)
+                      }
+                    >
                       <Eye className="h-4 w-4 mr-2" />
                       Voir
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/company/missions/${mission.id}/edit`)
+                      }
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Modifier
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Budget</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Budget
+                    </p>
                     <p className="text-lg font-semibold">{mission.budget}</p>
                   </div>
-                  
+
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Durée</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Durée
+                    </p>
                     <p className="text-lg font-semibold">{mission.duration}</p>
                   </div>
-                  
+
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Candidatures</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Candidatures
+                    </p>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      <span className="text-lg font-semibold">{mission.applicants}</span>
+                      <span className="text-lg font-semibold">
+                        {mission.applicants}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Freelance assigné</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Freelance assigné
+                    </p>
                     <p className="text-lg font-semibold">
                       {mission.selectedFreelance || "Non assigné"}
                     </p>
@@ -190,12 +225,12 @@ const CompanyMissions = () => {
                 {mission.status === "in_progress" && (
                   <div className="mt-6">
                     <div className="flex justify-between text-sm mb-2">
-                      <span>Progress</span>
+                      <span>Progression</span>
                       <span>{mission.progress}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-300" 
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
                         style={{ width: `${mission.progress}%` }}
                       />
                     </div>

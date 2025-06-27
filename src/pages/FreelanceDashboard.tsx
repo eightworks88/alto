@@ -1,63 +1,68 @@
-
-import { useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { FreelanceHeader } from "@/components/freelance/FreelanceHeader";
-import { FreelanceStats } from "@/components/freelance/FreelanceStats";
 import { ActiveMissionCard } from "@/components/freelance/ActiveMissionCard";
 import { AvailableMissionsList } from "@/components/freelance/AvailableMissionsList";
+import { FreelanceHeader } from "@/components/freelance/FreelanceHeader";
+import { FreelanceStats } from "@/components/freelance/FreelanceStats";
 import { ProfileStatus } from "@/components/freelance/ProfileStatus";
+import { useFreelanceDashboard } from "@/hooks/useFreelanceData";
+import type { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
 
 const FreelanceDashboard = () => {
-  const [availableMissions] = useState([
-    {
-      id: 1,
-      title: "Développeur React Senior",
-      company: "TechCorp",
-      budget: "550€/jour",
-      duration: "3 mois",
-      status: "available",
-      skills: ["React", "TypeScript", "Node.js"],
-      urgency: "high"
-    },
-    {
-      id: 2,
-      title: "Consultant DevOps",
-      company: "StartupXYZ", 
-      budget: "600€/jour",
-      duration: "6 mois",
-      status: "available",
-      skills: ["AWS", "Docker", "Kubernetes"],
-      urgency: "medium"
-    }
-  ]);
-
-  const [activeMissions] = useState([
-    {
-      id: 3,
-      title: "Lead Developer Frontend",
-      company: "DigitalCorp",
-      status: "in_progress",
-      progress: 65,
-      endDate: "2025-02-15"
-    }
-  ]);
+  // Utilisation de Redux et React Query
+  const { isLoading, error } = useFreelanceDashboard();
+  const availableMissions = useSelector(
+    (state: RootState) => state.freelance.availableMissions
+  );
+  const activeMissions = useSelector(
+    (state: RootState) => state.freelance.activeMissions
+  );
+  const stats = useSelector((state: RootState) => state.freelance.stats);
 
   const sidebarItems = [
     { label: "Dashboard", href: "/freelance", icon: "dashboard" },
     { label: "Mes missions", href: "/freelance/missions", icon: "list" },
     { label: "Profil", href: "/freelance/profile", icon: "user" },
-    { label: "Paiements", href: "/freelance/payments", icon: "wallet" }
+    { label: "Paiements", href: "/freelance/payments", icon: "wallet" },
   ];
 
+  if (isLoading) {
+    return (
+      <DashboardLayout
+        sidebarItems={sidebarItems}
+        userType="freelance"
+        userName="Marie Dubois"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Chargement du dashboard...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout
+        sidebarItems={sidebarItems}
+        userType="freelance"
+        userName="Marie Dubois"
+      >
+        <div className="flex items-center justify-center h-64">
+          <p className="text-destructive">Erreur: {error.message}</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <DashboardLayout 
+    <DashboardLayout
       sidebarItems={sidebarItems}
       userType="freelance"
       userName="Marie Dubois"
     >
       <div className="space-y-8">
         <FreelanceHeader />
-        <FreelanceStats />
+        <FreelanceStats stats={stats} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
