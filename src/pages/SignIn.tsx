@@ -11,9 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Github, Mail } from "lucide-react";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { apiCall } from "@/config/api";
+import { useToast } from "@/components/ui/use-toast";
 
 const SignIn = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,7 +27,6 @@ const SignIn = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear errors when user starts typing
     if (errors.length > 0) {
       setErrors([]);
     }
@@ -44,13 +47,33 @@ const SignIn = () => {
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Connexion:", formData);
+      
+      try {
+        const response = await apiCall('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify(formData),
+        });
+
+        // Stocker le token et les infos user
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+
+        toast({
+          title: 'Connexion réussie',
+          description: 'Bienvenue !',
+        });
+
+        // Redirection selon le rôle
+        if (response.user.role === 'company') {
+          navigate('/company');
+        } else {
+          navigate('/freelance');
+        }
+      } catch (error) {
+        setErrors([error instanceof Error ? error.message : 'Erreur de connexion']);
+      } finally {
         setIsLoading(false);
-        // Handle authentication logic here
-        // Redirect based on user type
-      }, 1000);
+      }
     }
   };
 
@@ -145,6 +168,13 @@ const SignIn = () => {
               </Button>
             </form>
 
+            {/* Test Accounts Info */}
+            <div className="p-4 bg-muted/50 rounded-lg text-xs space-y-1">
+              <p className="font-semibold">Comptes de test :</p>
+              <p>Company: company@test.com / Test1234!</p>
+              <p>Freelance: freelance@test.com / Test1234!</p>
+            </div>
+
             {/* Social Login */}
             <div className="space-y-3">
               <div className="relative">
@@ -157,11 +187,11 @@ const SignIn = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-10">
+                <Button variant="outline" className="h-10" disabled>
                   <Mail className="w-4 h-4 mr-2" />
                   Google
                 </Button>
-                <Button variant="outline" className="h-10">
+                <Button variant="outline" className="h-10" disabled>
                   <Github className="w-4 h-4 mr-2" />
                   GitHub
                 </Button>
